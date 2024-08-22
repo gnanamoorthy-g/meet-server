@@ -1,12 +1,17 @@
 const express = require('express');
 const app = express();
 const server = require("http").Server(app);
-const io = require('socket.io')(server);
-const path = require('path');
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "*",
+  },
+});
+const port = 8005;
 
 
-server.listen(8005, () => {
-    console.log("app running on port 8005");
+
+server.listen(port, () => {
+    console.log("app running on port ::",port);
 });
 
 var connections = [];

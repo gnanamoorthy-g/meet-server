@@ -6,12 +6,11 @@ const io = require("socket.io")(server, {
     origin: "*",
   },
 });
-const port = 8005;
 
 
 
-server.listen(port, () => {
-    console.log("app running on port ::",port);
+server.listen(process.env.PORT, () => {
+    console.log("app running on port ::",process.env.PORT);
 });
 
 app.use(function (req, res, next) {

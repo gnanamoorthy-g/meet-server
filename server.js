@@ -44,14 +44,18 @@ io.on("connection", (socket) => {
   })
 
   socket.on("exit_user_from_room", (data) => {
-    let { user, meeting_room } = data;
-    let meeting = active_rooms[meeting_room.room_id];
-    if (meeting) {
+    let { user, meeting_id } = data;
+    let meeting = active_rooms[meeting_id];
+    if (meeting && meeting.participants) {
       meeting.participants = meeting.participants.filter(
         (p) => p.id !== user.id
       );
+      meeting.participants.forEach((c) => {
+        console.log("connectionId is ::: "+c.connectionId);
+        socket.to(c.connectionId).emit("notify_participants", meeting);
+      });
+      console.log(" **** User exited Meeting ***** ",active_rooms);
     }
-    console.log(" **** User exited Meeting ***** ",active_rooms);
   });
 
   socket.on("user_joined_meeting_room", (data) => {

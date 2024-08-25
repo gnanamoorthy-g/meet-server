@@ -52,7 +52,11 @@ io.on("connection", (socket) => {
       );
       meeting.participants.forEach((c) => {
         console.log("connectionId is ::: "+c.connectionId);
-        socket.to(c.connectionId).emit("notify_participants", meeting);
+        socket.to(c.connectionId).emit("notify_participants_about_exited_user", {
+          meeting,
+          exited_connection_id : socket.id,
+          exited_user : user
+        });
       });
       console.log(" **** User exited Meeting ***** ",active_rooms);
     }
@@ -69,12 +73,14 @@ io.on("connection", (socket) => {
       socket.emit("sync_meeting_info",meeting);
       
       meeting.participants.forEach((c) => {
-        console.log("connectionId is ::: "+c.connectionId);
-        socket.to(c.connectionId).emit("notify_participants", {
-          meeting,
-          new_connection_id : socket.id,
-          joined_user : user
-        });
+        if (c.connectionId !== socket.id) {
+          console.log("connectionId is ::: " + c.connectionId);
+          socket.to(c.connectionId).emit("notify_participants_about_joined_user", {
+            meeting,
+            new_connection_id: socket.id,
+            joined_user: user,
+          });
+        }
       });
       console.log(" **** User joined Meeting ***** ",active_rooms);
     }
@@ -91,5 +97,33 @@ io.on("connection", (socket) => {
       });
     }
   });
+
+  socket.on("send_offer",(data) => {
+    console.log(" *** sending offer *** ");
+    let { message, meeting_id , to} = data;
+    socket.to(to).emit("receive_offer",{
+      message,
+      from : socket.id
+    });
+  });
+
+  socket.on("send_answer",(data) => {
+    console.log(" *** sending answer *** ");
+    let { message, meeting_id , to} = data;
+    socket.to(to).emit("receive_answer",{
+      message,
+      from : socket.id
+    });
+  });
+
+  socket.on("on_new_ice_candidate",(data) => {
+    console.log(" *** on ice candidate *** ", data);
+    let { message, meeting_id , to} = data;
+    let candidate = message;
+    socket.to(to).emit("receive_ice_candidate",{
+      candidate,
+      from : socket.id
+    });
+  })
 
 });

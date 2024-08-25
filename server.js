@@ -66,13 +66,30 @@ io.on("connection", (socket) => {
     if (meeting) {
       meeting.participants.push(user);
 
-      socket.emit("notify_participants",meeting);
+      socket.emit("sync_meeting_info",meeting);
       
       meeting.participants.forEach((c) => {
         console.log("connectionId is ::: "+c.connectionId);
-        socket.to(c.connectionId).emit("notify_participants", meeting);
+        socket.to(c.connectionId).emit("notify_participants", {
+          meeting,
+          new_connection_id : socket.id,
+          joined_user : user
+        });
       });
       console.log(" **** User joined Meeting ***** ",active_rooms);
     }
   });
+
+  socket.on("SDP_PROCESS",(data) => {
+    let { message , meeting_id , to} = data;
+    let meeting = active_rooms[meeting_id];
+    console.log(meeting,meeting_id,to,"--server-log");
+    if (meeting) {
+      socket.to(to).emit("SDP_PROCESS",{
+        message,
+        from : socket.id
+      });
+    }
+  });
+
 });

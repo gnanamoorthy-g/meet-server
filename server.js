@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const server = require("http").Server(app);
 const io = require("socket.io")(server, {
+  pingTimeout: 600000,
   cors: {
     origin: "*",
   },
@@ -65,9 +66,11 @@ io.on("connection", (socket) => {
   socket.on("user_joined_meeting_room", (data) => {
     let { user, meeting_room } = data;
     user["connectionId"] = socket.id;
-    console.log(user,"user")
+    console.log(user,"user");
     let meeting = active_rooms[meeting_room.room_id];
     if (meeting) {
+      let userExists = meeting.participants.find(ex => ex.id === user.id);
+      if(userExists) return;
       meeting.participants.push(user);
 
       socket.emit("sync_meeting_info",meeting);
@@ -83,18 +86,6 @@ io.on("connection", (socket) => {
         }
       });
       console.log(" **** User joined Meeting ***** ",active_rooms);
-    }
-  });
-
-  socket.on("SDP_PROCESS",(data) => {
-    let { message , meeting_id , to} = data;
-    let meeting = active_rooms[meeting_id];
-    console.log(meeting,meeting_id,to,"--server-log");
-    if (meeting) {
-      socket.to(to).emit("SDP_PROCESS",{
-        message,
-        from : socket.id
-      });
     }
   });
 
